@@ -1,4 +1,4 @@
-module github.com/frobnitzem/golang-api
+module github.com/ORNL/slurmfs
 
 go 1.18
 
