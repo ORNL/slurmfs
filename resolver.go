@@ -29,7 +29,7 @@ func (client Client) Call(method, path string, data []byte) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (client Client) getJobs() (resp JobsResponse, err error) {
+func (client Client) Jobs() (resp JobsResponse, err error) {
 	// recommended parameter: update_time: int64
 	body, err := client.Call("GET", "jobs", nil)
 	if err != nil {
@@ -56,27 +56,20 @@ func (client Client) Create(script string, prop JobProps) (resp SubmitResponse, 
 	return
 }
 
-func (client Client) Update(job_id int, prop JobProps) error {
+func (client Client) Update(job_id int, prop JobProps) (resp SlurmResponse, err error) {
 	path := fmt.Sprintf("job/%d", job_id)
 	req, err := json.Marshal(&prop)
 	if err != nil {
-		return err
+		return
 	}
 	body, err := client.Call("POST", path, req)
 	if err != nil {
-		return err
+		return
 	}
-        var resp SlurmResponse
-        if err := json.Unmarshal(body, &resp); err != nil {
-		return err
+        if err = json.Unmarshal(body, &resp); err != nil {
+		return
 	}
-
-	s := string(body)
-	fmt.Println("Update returned")
-	fmt.Println(s)
-	// must send JobProps as body
-	// TODO parse from yaml
-	return nil
+	return
 }
 
 func (client Client) Remove(job_id int) error {

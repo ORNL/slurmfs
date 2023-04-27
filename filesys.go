@@ -2,6 +2,7 @@ package slurmfs
 
 import (
 	"context"
+        "fmt"
 	"os"
 	"net"
 	"time"
@@ -13,9 +14,9 @@ import (
 )
 
 type SlurmServer struct {
-	client Client
+	Client Client
 	//jobcache []...
-	logfile *os.File
+	Logfile *os.File
 }
 
 // Creating an http client from a UNIX socket
@@ -35,12 +36,12 @@ func UnixClient(path string) Client {
 }
 
 func (s *SlurmServer) log(info string) error {
-	_, err := s.logfile.WriteString(info)
+	_, err := s.Logfile.WriteString(info)
 	return err
 }
 
 func (s *SlurmServer) readlog(b []byte, off int64) (int, error) {
-	return s.logfile.ReadAt(b, off)
+	return s.Logfile.ReadAt(b, off)
 }
 
 func NewServer(ctx context.Context, path string) (*SlurmServer, error) {
@@ -55,7 +56,7 @@ func NewServer(ctx context.Context, path string) (*SlurmServer, error) {
         if err != nil {
             return nil, err
         }
-        srv := SlurmServer{logfile: log}
+        srv := SlurmServer{Logfile: log}
 
         // Start up the slurmrestd on a socket
 
@@ -63,14 +64,15 @@ func NewServer(ctx context.Context, path string) (*SlurmServer, error) {
         // create if not exists (and capture its log messages)
         if _, err = os.Stat(sock); err != nil {
             //os.Remove(sock)
-            restd := exec.Command("/usr/sbin/slurmrestd", "unix:" + sock)
+            restd := exec.CommandContext(ctx, "/usr/sbin/slurmrestd", "unix:" + sock)
+            fmt.Println("Starting slurmrestd")
             go monitor(restd, srv.log)
             time.Sleep(200*time.Millisecond)
         }
 
 	//client := &http.Client{} (could use tcp...)
 	client := UnixClient(sock)
-        srv.client = client
+        srv.Client = client
 
 	return &srv, nil
 }

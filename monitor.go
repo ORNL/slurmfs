@@ -5,9 +5,11 @@ import (
     "os/exec"
 )
 
+// TODO: adapt https://gist.github.com/mxschmitt/6c07b5b97853f05455c3fdaf48b1a8b6
 func monitor(cmd *exec.Cmd, cb func(string)error) {
     //restIn, _  := cmd.StdinPipe()
     stdout, err := cmd.StdoutPipe()
+    cmd.Stderr = cmd.Stdout
     if err != nil {
         cb(err.Error())
         return
